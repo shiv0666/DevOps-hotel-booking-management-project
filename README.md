@@ -82,9 +82,3 @@ git push
 
 
 
----
-If you want, I can also:
-- create a `.gitignore` tuned for Node and Vite,
-- add a small `README` section with env var examples for `frontend` if you use a proxy, or
-- open the repo in your browser now.
-# DevOps-project-hotel-booking-managemet
