@@ -1,0 +1,211 @@
+// API ENDPOINT TESTING GUIDE
+// Use Postman or REST Client to test these endpoints
+
+// ===== AUTHENTICATION =====
+
+// 1. REGISTER (Customer)
+POST http://localhost:5000/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "John Customer",
+  "email": "john@email.com",
+  "password": "password123"
+}
+// Response: token + user data with role="CUSTOMER"
+
+// 2. LOGIN
+POST http://localhost:5000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "john@email.com",
+  "password": "password123"
+}
+// Response: token + user data
+
+// 3. GET PROFILE
+GET http://localhost:5000/api/auth/profile
+Authorization: Bearer {token}
+
+// ===== CREATE STAFF (Admin Only) =====
+
+POST http://localhost:5000/api/auth/create-staff
+Authorization: Bearer {admin_token}
+Content-Type: application/json
+
+{
+  "name": "Staff Member",
+  "email": "staff@hotel.com",
+  "password": "staffpass123",
+  "hotelId": "65c2d1a2b3c4d5e6f7g8h9i0"
+}
+// Response: staff user object with role="STAFF"
+
+// ===== HOTELS (Admin Only - Create/Seed) =====
+
+// Seed Hotels
+GET http://localhost:5000/api/hotels/seed
+Authorization: Bearer {admin_token}
+
+// Create Hotel
+POST http://localhost:5000/api/hotels
+Authorization: Bearer {admin_token}
+Content-Type: application/json
+
+{
+  "name": "Taj Palace Hotel",
+  "location": "New Delhi",
+  "description": "5-star luxury hotel in Delhi",
+  "roomTypes": [
+    {
+      "type": "Standard",
+      "totalRooms": 20,
+      "price": 2000
+    },
+    {
+      "type": "Deluxe",
+      "totalRooms": 15,
+      "price": 4000
+    },
+    {
+      "type": "Suite",
+      "totalRooms": 5,
+      "price": 8000
+    }
+  ]
+}
+
+// List Hotels (All users can view)
+GET http://localhost:5000/api/hotels
+Authorization: Bearer {any_token}
+
+// List with Filters
+GET http://localhost:5000/api/hotels?location=Delhi&roomType=Deluxe&minPrice=3000&maxPrice=5000
+Authorization: Bearer {any_token}
+
+// ===== BOOKINGS (Customer Routes) =====
+
+// Check Availability
+POST http://localhost:5000/api/bookings/check
+Authorization: Bearer {customer_token}
+Content-Type: application/json
+
+{
+  "hotelId": "65c2d1a2b3c4d5e6f7g8h9i0",
+  "roomType": "Deluxe",
+  "checkIn": "2024-02-15",
+  "checkOut": "2024-02-17",
+  "rooms": 2
+}
+// Response: { requested, availableRooms, ok, price }
+
+// Create Booking (PENDING status)
+POST http://localhost:5000/api/bookings
+Authorization: Bearer {customer_token}
+Content-Type: application/json
+
+{
+  "hotelId": "65c2d1a2b3c4d5e6f7g8h9i0",
+  "roomType": "Deluxe",
+  "rooms": 1,
+  "checkIn": "2024-02-15",
+  "checkOut": "2024-02-17",
+  "guests": 2,
+  "price": 4000,
+  "contactInfo": {
+    "phone": "9876543210",
+    "notes": "Need early check-in if possible"
+  }
+}
+// Response: booking object with status="PENDING"
+
+// Get My Bookings (Customer)
+GET http://localhost:5000/api/bookings/my
+Authorization: Bearer {customer_token}
+
+// ===== BOOKINGS (Staff Routes) =====
+
+// Get Hotel's Pending Bookings (Staff Only)
+GET http://localhost:5000/api/bookings/hotel
+Authorization: Bearer {staff_token}
+// Only shows bookings for staff's assigned hotel
+
+// Approve Booking (Staff Only)
+PUT http://localhost:5000/api/bookings/65c2d1a2b3c4d5e6f7g8h9i0/approve
+Authorization: Bearer {staff_token}
+// Response: booking with status="APPROVED", approvedBy=staff_id
+
+// Reject Booking (Staff Only)
+PUT http://localhost:5000/api/bookings/65c2d1a2b3c4d5e6f7g8h9i0/reject
+Authorization: Bearer {staff_token}
+// Response: booking with status="REJECTED"
+
+// ===== BOOKINGS (Admin Routes) =====
+
+// Get All Bookings (Admin Only)
+GET http://localhost:5000/api/bookings
+Authorization: Bearer {admin_token}
+// Returns all bookings from all hotels
+
+// ===== ERROR EXAMPLES =====
+
+// Trying to create hotel as customer
+POST http://localhost:5000/api/hotels
+Authorization: Bearer {customer_token}
+Content-Type: application/json
+// Response 403: "Only admins can create hotels"
+
+// Trying to view another staff's hotel bookings
+GET http://localhost:5000/api/bookings/hotel
+Authorization: Bearer {different_staff_token}
+// Response 403: "Cannot approve bookings from other hotels" (if trying approve)
+
+// Trying to create booking as staff
+POST http://localhost:5000/api/bookings
+Authorization: Bearer {staff_token}
+Content-Type: application/json
+// Response 403: "Only customers can create bookings"
+
+// ===== AUTHENTICATION ERROR EXAMPLES =====
+
+// Missing token
+GET http://localhost:5000/api/bookings/my
+// Response 401: "Not authorized, no token"
+
+// Invalid token
+GET http://localhost:5000/api/bookings/my
+Authorization: Bearer invalid_token_here
+// Response 401: "Not authorized, token failed"
+
+// ===== TOKEN STRUCTURE =====
+// Decoded JWT contains:
+{
+  "id": "user_id",
+  "role": "ADMIN|STAFF|CUSTOMER",
+  "email": "user@email.com",
+  "hotelId": "hotel_id" // only for STAFF
+}
+
+// ===== DATABASE SEEDING =====
+// Call this once as admin to populate sample hotels:
+GET http://localhost:5000/api/hotels/seed?Authorization=Bearer%20{admin_token}
+
+// ===== TESTING FLOW =====
+
+// 1. Create admin account (manually in MongoDB or via registration + role change)
+// 2. Login as admin, get admin token
+// 3. Seed hotels using admin token
+// 4. Create staff accounts using admin token
+// 5. Register customer
+// 6. Login customer, check availability, create booking
+// 7. Login staff, view pending bookings, approve/reject
+// 8. Login customer, view booking status
+
+// ===== KEY NOTES =====
+// - All protected routes require Authorization: Bearer {token} header
+// - Staff can only manage bookings for their assigned hotel
+// - Rooms are only blocked when booking status = "APPROVED"
+// - Customers can only create/view their own bookings
+// - Admins can see all bookings in the system
+// - Tokens are valid for 7 days by default
