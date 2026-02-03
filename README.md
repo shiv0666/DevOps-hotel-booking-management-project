@@ -80,11 +80,7 @@ git commit -m "Your message"
 git push
 ```
 
-**Contributing**
-Open an issue or PR; keep changes focused and include a short description of the problem and solution.
 
-**License**
-Add a license of your choice (e.g., MIT) if you plan to open-source this project.
 
 ---
 If you want, I can also:
