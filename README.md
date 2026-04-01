@@ -3,7 +3,7 @@
 > A simple hotel booking application with separate `backend` (Node/Express/MongoDB) and `frontend` (React + Vite) folders.
 
 **Features**
-- **User auth:** signup / login with JWT
+- **User auth:** signup / login with JWT.
 - **Hotels:** create, list, update, delete hotels (admin/staff flows)
 - **Bookings:** create and view bookings per user
 
