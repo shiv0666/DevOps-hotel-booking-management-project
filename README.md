@@ -5,7 +5,7 @@
 **Features**
 - **User auth:** signup / login with JWT
 - **Hotels:** create, list, update, delete hotels (admin/staff flows)
-- **Bookings:** create and view bookings per user.
+- **Bookings:** create and view bookings per user
 
 **Tech Stack**
 - Backend: Node.js, Express, MongoDB (Mongoose)
